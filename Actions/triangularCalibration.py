@@ -7,16 +7,14 @@ class TriangularCalibration(MakesmithInitFuncs):
     motorYoffsetEst = 0
     chainSagCorrectionEst = 0
     rotationRadiusEst = 0
-    
+
     def cutTriangularCalibrationPattern(self):
         '''
         Sends command to controller to cut the calibration pattern.
         :return:
         '''
 
-        workspaceHeight = float(
-            self.data.config.getValue("Maslow Settings", "bedHeight")
-        )
+        workspaceHeight = float(self.data.config.getValue("Maslow Settings", "bedHeight"))
         workspaceWidth = float(self.data.config.getValue("Maslow Settings", "bedWidth"))
 
         # keep track of the units the machine is currently using to revert back if needed.
@@ -35,11 +33,7 @@ class TriangularCalibration(MakesmithInitFuncs):
         self.data.gcode_queue.put("M3 ")  # Turn on the spindle
 
         self.data.gcode_queue.put(
-            "G0 X-"
-            + str((workspaceWidth / 2) - 254)
-            + " Y+"
-            + str((workspaceHeight / 2) - 241.3)
-            + " "
+            "G0 X-" + str((workspaceWidth / 2) - 254) + " Y+" + str((workspaceHeight / 2) - 241.3) + " "
         )  # Move to first cut point
         self.data.gcode_queue.put("G1 Z-7 F500 ")
         self.data.gcode_queue.put("G1 Y-25.4 ")  # Cut 25.4mm vertical mark
@@ -51,11 +45,7 @@ class TriangularCalibration(MakesmithInitFuncs):
         self.data.gcode_queue.put("G1 Y-25.4 ")  # Cut 25.4mm vertical mark
         self.data.gcode_queue.put("G1 Z7 ")
         self.data.gcode_queue.put(
-            "G0 X"
-            + str(workspaceWidth - 533.4)
-            + " Y"
-            + str(workspaceHeight - 482.6)
-            + " "
+            "G0 X" + str(workspaceWidth - 533.4) + " Y" + str(workspaceHeight - 482.6) + " "
         )  # Move up and right on the workspace to fifth and second cut points
         self.data.gcode_queue.put("G1 Z-7 ")
         self.data.gcode_queue.put("G1 X25.4 ")  # Cut 25.4mm horizontal mark
@@ -79,7 +69,6 @@ class TriangularCalibration(MakesmithInitFuncs):
 
         return True
 
-
     def calculate(self, result):
         """
         Takes the measured distance and uses it to iteratively calculate the rotationDiskRadius and yMotorOffset
@@ -87,27 +76,21 @@ class TriangularCalibration(MakesmithInitFuncs):
 
         # Validate user inputs
 
-        workspaceHeight = float(
-            self.data.config.getValue("Maslow Settings", "bedHeight")
-        )
+        workspaceHeight = float(self.data.config.getValue("Maslow Settings", "bedHeight"))
         workspaceWidth = float(self.data.config.getValue("Maslow Settings", "bedWidth"))
 
         try:
             distBetweenCuts12 = float(result["cut12"])
             self.data.console_queue.put(distBetweenCuts12)
         except:
-            self.data.message_queue.put(
-                "Message: Please enter a number for the distance between cut 1 and cut 2."
-            )
+            self.data.message_queue.put("Message: Please enter a number for the distance between cut 1 and cut 2.")
             return False
 
         try:
             distBetweenCuts34 = float(result["cut34"])
             self.data.console_queue.put(distBetweenCuts34)
         except:
-            self.data.message_queue.put(
-                "Message: Please enter a number for the distance between cut 3 and cut 4."
-            )
+            self.data.message_queue.put("Message: Please enter a number for the distance between cut 3 and cut 4.")
             return False
 
         try:
@@ -123,33 +106,25 @@ class TriangularCalibration(MakesmithInitFuncs):
             bitDiameter = float(result["bitDiameter"])
             self.data.console_queue.put(bitDiameter)
         except:
-            self.data.message_queue.put(
-                "Message: Please enter a number for the bit diameter."
-            )
+            self.data.message_queue.put("Message: Please enter a number for the bit diameter.")
             return False
 
         if True:
-            if (distBetweenCuts12 > workspaceWidth) or (
-                distBetweenCuts12 < (workspaceWidth / 2)
-            ):
+            if (distBetweenCuts12 > workspaceWidth) or (distBetweenCuts12 < (workspaceWidth / 2)):
                 self.data.message_queue.put(
                     "Message: The measurement between cut 1 and cut 2 of "
                     + str(distBetweenCuts12)
                     + " mm seems wrong.\n\nPlease check the number and enter it again."
                 )
                 return False
-            if (distBetweenCuts34 > workspaceWidth) or (
-                distBetweenCuts34 < (workspaceWidth / 2)
-            ):
+            if (distBetweenCuts34 > workspaceWidth) or (distBetweenCuts34 < (workspaceWidth / 2)):
                 self.data.message_queue.put(
                     "Message: The measurement between cut 3 and cut 4 of "
                     + str(distBetweenCuts34)
                     + " mm seems wrong.\n\nPlease check the number and enter it again."
                 )
                 return False
-            if (distWorkareaTopToCut5 > (workspaceHeight / 2)) or (
-                distWorkareaTopToCut5 < 0
-            ):
+            if (distWorkareaTopToCut5 > (workspaceHeight / 2)) or (distWorkareaTopToCut5 < 0):
                 self.data.message_queue.put(
                     "Message: The measurement between the top edge of the work area and cut 5 of "
                     + str(distWorkareaTopToCut5)
@@ -175,24 +150,13 @@ class TriangularCalibration(MakesmithInitFuncs):
 
         # Gather current machine parameters
 
-        motorSpacing = float(
-            self.data.config.getValue("Maslow Settings", "motorSpacingX")
-        )
+        motorSpacing = float(self.data.config.getValue("Maslow Settings", "motorSpacingX"))
         motorXcoord = motorSpacing / 2
-        motorYoffsetEst = float(
-            self.data.config.getValue("Maslow Settings", "motorOffsetY")
-        )
+        motorYoffsetEst = float(self.data.config.getValue("Maslow Settings", "motorOffsetY"))
         motorYcoordEst = (workspaceHeight / 2) + motorYoffsetEst
-        rotationRadiusEst = float(
-            self.data.config.getValue("Advanced Settings", "rotationRadius")
-        )
-        chainSagCorrectionEst = float(
-            self.data.config.getValue("Advanced Settings", "chainSagCorrection")
-        )
-        if (
-            str(self.data.config.getValue("Advanced Settings", "chainOverSprocket"))
-            == "Top"
-        ):
+        rotationRadiusEst = float(self.data.config.getValue("Advanced Settings", "rotationRadius"))
+        chainSagCorrectionEst = float(self.data.config.getValue("Advanced Settings", "chainSagCorrection"))
+        if str(self.data.config.getValue("Advanced Settings", "chainOverSprocket")) == "Top":
             chainOverSprocket = 1
         else:
             chainOverSprocket = 2
@@ -258,59 +222,35 @@ class TriangularCalibration(MakesmithInitFuncs):
             ChainAroundSprocketCut4 = motorSprocketRadius * (3.14159 - ChainAngleCut4)
 
         # Calculate the straight chain length from the sprocket to the bit
-        ChainStraightCut1 = math.sqrt(
-            math.pow(MotorDistanceCut1, 2) - math.pow(motorSprocketRadius, 2)
-        )
-        ChainStraightCut2 = math.sqrt(
-            math.pow(MotorDistanceCut2, 2) - math.pow(motorSprocketRadius, 2)
-        )
-        ChainStraightCut3 = math.sqrt(
-            math.pow(MotorDistanceCut3, 2) - math.pow(motorSprocketRadius, 2)
-        )
-        ChainStraightCut4 = math.sqrt(
-            math.pow(MotorDistanceCut4, 2) - math.pow(motorSprocketRadius, 2)
-        )
+        ChainStraightCut1 = math.sqrt(math.pow(MotorDistanceCut1, 2) - math.pow(motorSprocketRadius, 2))
+        ChainStraightCut2 = math.sqrt(math.pow(MotorDistanceCut2, 2) - math.pow(motorSprocketRadius, 2))
+        ChainStraightCut3 = math.sqrt(math.pow(MotorDistanceCut3, 2) - math.pow(motorSprocketRadius, 2))
+        ChainStraightCut4 = math.sqrt(math.pow(MotorDistanceCut4, 2) - math.pow(motorSprocketRadius, 2))
 
         # Correct the straight chain lengths to account for chain sag
         ChainStraightCut1 *= 1 + (
             (chainSagCorrectionEst / 1000000000000)
             * math.pow(math.cos(ChainAngleCut1), 2)
             * math.pow(ChainStraightCut1, 2)
-            * math.pow(
-                (math.tan(ChainAngleCut2) * math.cos(ChainAngleCut1))
-                + math.sin(ChainAngleCut1),
-                2,
-            )
+            * math.pow((math.tan(ChainAngleCut2) * math.cos(ChainAngleCut1)) + math.sin(ChainAngleCut1), 2,)
         )
         ChainStraightCut2 *= 1 + (
             (chainSagCorrectionEst / 1000000000000)
             * math.pow(math.cos(ChainAngleCut2), 2)
             * math.pow(ChainStraightCut2, 2)
-            * math.pow(
-                (math.tan(ChainAngleCut1) * math.cos(ChainAngleCut2))
-                + math.sin(ChainAngleCut2),
-                2,
-            )
+            * math.pow((math.tan(ChainAngleCut1) * math.cos(ChainAngleCut2)) + math.sin(ChainAngleCut2), 2,)
         )
         ChainStraightCut3 *= 1 + (
             (chainSagCorrectionEst / 1000000000000)
             * math.pow(math.cos(ChainAngleCut3), 2)
             * math.pow(ChainStraightCut3, 2)
-            * math.pow(
-                (math.tan(ChainAngleCut4) * math.cos(ChainAngleCut3))
-                + math.sin(ChainAngleCut3),
-                2,
-            )
+            * math.pow((math.tan(ChainAngleCut4) * math.cos(ChainAngleCut3)) + math.sin(ChainAngleCut3), 2,)
         )
         ChainStraightCut4 *= 1 + (
             (chainSagCorrectionEst / 1000000000000)
             * math.pow(math.cos(ChainAngleCut4), 2)
             * math.pow(ChainStraightCut4, 2)
-            * math.pow(
-                (math.tan(ChainAngleCut3) * math.cos(ChainAngleCut4))
-                + math.sin(ChainAngleCut4),
-                2,
-            )
+            * math.pow((math.tan(ChainAngleCut3) * math.cos(ChainAngleCut4)) + math.sin(ChainAngleCut4), 2,)
         )
 
         # Calculate total chain lengths accounting for sprocket geometry and chain sag
@@ -364,41 +304,33 @@ class TriangularCalibration(MakesmithInitFuncs):
             # Calculate chain lengths for current estimated parameters
 
             MotorDistanceCut1Est = math.sqrt(
-                math.pow(motorXcoord - (distBetweenCuts12 / 2), 2)
-                + math.pow(motorYcoordEst, 2)
+                math.pow(motorXcoord - (distBetweenCuts12 / 2), 2) + math.pow(motorYcoordEst, 2)
             )
             MotorDistanceCut2Est = math.sqrt(
-                math.pow(motorXcoord + (distBetweenCuts12 / 2), 2)
-                + math.pow(motorYcoordEst, 2)
+                math.pow(motorXcoord + (distBetweenCuts12 / 2), 2) + math.pow(motorYcoordEst, 2)
             )
             MotorDistanceCut3Est = math.sqrt(
                 math.pow(motorXcoord - (distBetweenCuts34 / 2), 2)
-                + math.pow(
-                    motorYcoordEst + (workspaceHeight - 508) - cut34YoffsetEst, 2
-                )
+                + math.pow(motorYcoordEst + (workspaceHeight - 508) - cut34YoffsetEst, 2)
             )
             MotorDistanceCut4Est = math.sqrt(
                 math.pow(motorXcoord + (distBetweenCuts34 / 2), 2)
-                + math.pow(
-                    motorYcoordEst + (workspaceHeight - 508) - cut34YoffsetEst, 2
-                )
+                + math.pow(motorYcoordEst + (workspaceHeight - 508) - cut34YoffsetEst, 2)
             )
 
             # Calculate the chain angles from horizontal, based on if the chain connects to the sled from the top or bottom of the sprocket
             if chainOverSprocket == 1:
-                ChainAngleCut1Est = math.asin(
-                    motorYcoordEst / MotorDistanceCut1Est
-                ) + math.asin(motorSprocketRadius / MotorDistanceCut1Est)
-                ChainAngleCut2Est = math.asin(
-                    motorYcoordEst / MotorDistanceCut2Est
-                ) + math.asin(motorSprocketRadius / MotorDistanceCut2Est)
+                ChainAngleCut1Est = math.asin(motorYcoordEst / MotorDistanceCut1Est) + math.asin(
+                    motorSprocketRadius / MotorDistanceCut1Est
+                )
+                ChainAngleCut2Est = math.asin(motorYcoordEst / MotorDistanceCut2Est) + math.asin(
+                    motorSprocketRadius / MotorDistanceCut2Est
+                )
                 ChainAngleCut3Est = math.asin(
-                    (motorYcoordEst + (workspaceHeight - 508) - cut34YoffsetEst)
-                    / MotorDistanceCut3Est
+                    (motorYcoordEst + (workspaceHeight - 508) - cut34YoffsetEst) / MotorDistanceCut3Est
                 ) + math.asin(motorSprocketRadius / MotorDistanceCut3Est)
                 ChainAngleCut4Est = math.asin(
-                    (motorYcoordEst + (workspaceHeight - 508) - cut34YoffsetEst)
-                    / MotorDistanceCut4Est
+                    (motorYcoordEst + (workspaceHeight - 508) - cut34YoffsetEst) / MotorDistanceCut4Est
                 ) + math.asin(motorSprocketRadius / MotorDistanceCut4Est)
 
                 ChainAroundSprocketCut1Est = motorSprocketRadius * ChainAngleCut1Est
@@ -406,47 +338,29 @@ class TriangularCalibration(MakesmithInitFuncs):
                 ChainAroundSprocketCut3Est = motorSprocketRadius * ChainAngleCut3Est
                 ChainAroundSprocketCut4Est = motorSprocketRadius * ChainAngleCut4Est
             else:
-                ChainAngleCut1Est = math.asin(
-                    motorYcoordEst / MotorDistanceCut1Est
-                ) - math.asin(motorSprocketRadius / MotorDistanceCut1Est)
-                ChainAngleCut2Est = math.asin(
-                    motorYcoordEst / MotorDistanceCut2Est
-                ) - math.asin(motorSprocketRadius / MotorDistanceCut2Est)
+                ChainAngleCut1Est = math.asin(motorYcoordEst / MotorDistanceCut1Est) - math.asin(
+                    motorSprocketRadius / MotorDistanceCut1Est
+                )
+                ChainAngleCut2Est = math.asin(motorYcoordEst / MotorDistanceCut2Est) - math.asin(
+                    motorSprocketRadius / MotorDistanceCut2Est
+                )
                 ChainAngleCut3Est = math.asin(
-                    (motorYcoordEst + (workspaceHeight - 508) - cut34YoffsetEst)
-                    / MotorDistanceCut3Est
+                    (motorYcoordEst + (workspaceHeight - 508) - cut34YoffsetEst) / MotorDistanceCut3Est
                 ) - math.asin(motorSprocketRadius / MotorDistanceCut3Est)
                 ChainAngleCut4Est = math.asin(
-                    (motorYcoordEst + (workspaceHeight - 508) - cut34YoffsetEst)
-                    / MotorDistanceCut4Est
+                    (motorYcoordEst + (workspaceHeight - 508) - cut34YoffsetEst) / MotorDistanceCut4Est
                 ) - math.asin(motorSprocketRadius / MotorDistanceCut4Est)
 
-                ChainAroundSprocketCut1Est = motorSprocketRadius * (
-                    3.14159 - ChainAngleCut1Est
-                )
-                ChainAroundSprocketCut2Est = motorSprocketRadius * (
-                    3.14159 - ChainAngleCut2Est
-                )
-                ChainAroundSprocketCut3Est = motorSprocketRadius * (
-                    3.14159 - ChainAngleCut3Est
-                )
-                ChainAroundSprocketCut4Est = motorSprocketRadius * (
-                    3.14159 - ChainAngleCut4Est
-                )
+                ChainAroundSprocketCut1Est = motorSprocketRadius * (3.14159 - ChainAngleCut1Est)
+                ChainAroundSprocketCut2Est = motorSprocketRadius * (3.14159 - ChainAngleCut2Est)
+                ChainAroundSprocketCut3Est = motorSprocketRadius * (3.14159 - ChainAngleCut3Est)
+                ChainAroundSprocketCut4Est = motorSprocketRadius * (3.14159 - ChainAngleCut4Est)
 
             # Calculate the straight chain length from the sprocket to the bit
-            ChainStraightCut1Est = math.sqrt(
-                math.pow(MotorDistanceCut1Est, 2) - math.pow(motorSprocketRadius, 2)
-            )
-            ChainStraightCut2Est = math.sqrt(
-                math.pow(MotorDistanceCut2Est, 2) - math.pow(motorSprocketRadius, 2)
-            )
-            ChainStraightCut3Est = math.sqrt(
-                math.pow(MotorDistanceCut3Est, 2) - math.pow(motorSprocketRadius, 2)
-            )
-            ChainStraightCut4Est = math.sqrt(
-                math.pow(MotorDistanceCut4Est, 2) - math.pow(motorSprocketRadius, 2)
-            )
+            ChainStraightCut1Est = math.sqrt(math.pow(MotorDistanceCut1Est, 2) - math.pow(motorSprocketRadius, 2))
+            ChainStraightCut2Est = math.sqrt(math.pow(MotorDistanceCut2Est, 2) - math.pow(motorSprocketRadius, 2))
+            ChainStraightCut3Est = math.sqrt(math.pow(MotorDistanceCut3Est, 2) - math.pow(motorSprocketRadius, 2))
+            ChainStraightCut4Est = math.sqrt(math.pow(MotorDistanceCut4Est, 2) - math.pow(motorSprocketRadius, 2))
 
             # Correct the straight chain lengths to account for chain sag
             ChainStraightCut1Est *= 1 + (
@@ -454,9 +368,7 @@ class TriangularCalibration(MakesmithInitFuncs):
                 * math.pow(math.cos(ChainAngleCut1Est), 2)
                 * math.pow(ChainStraightCut1Est, 2)
                 * math.pow(
-                    (math.tan(ChainAngleCut2Est) * math.cos(ChainAngleCut1Est))
-                    + math.sin(ChainAngleCut1Est),
-                    2,
+                    (math.tan(ChainAngleCut2Est) * math.cos(ChainAngleCut1Est)) + math.sin(ChainAngleCut1Est), 2,
                 )
             )
             ChainStraightCut2Est *= 1 + (
@@ -464,9 +376,7 @@ class TriangularCalibration(MakesmithInitFuncs):
                 * math.pow(math.cos(ChainAngleCut2Est), 2)
                 * math.pow(ChainStraightCut2Est, 2)
                 * math.pow(
-                    (math.tan(ChainAngleCut1Est) * math.cos(ChainAngleCut2Est))
-                    + math.sin(ChainAngleCut2Est),
-                    2,
+                    (math.tan(ChainAngleCut1Est) * math.cos(ChainAngleCut2Est)) + math.sin(ChainAngleCut2Est), 2,
                 )
             )
             ChainStraightCut3Est *= 1 + (
@@ -474,9 +384,7 @@ class TriangularCalibration(MakesmithInitFuncs):
                 * math.pow(math.cos(ChainAngleCut3Est), 2)
                 * math.pow(ChainStraightCut3Est, 2)
                 * math.pow(
-                    (math.tan(ChainAngleCut4Est) * math.cos(ChainAngleCut3Est))
-                    + math.sin(ChainAngleCut3Est),
-                    2,
+                    (math.tan(ChainAngleCut4Est) * math.cos(ChainAngleCut3Est)) + math.sin(ChainAngleCut3Est), 2,
                 )
             )
             ChainStraightCut4Est *= 1 + (
@@ -484,9 +392,7 @@ class TriangularCalibration(MakesmithInitFuncs):
                 * math.pow(math.cos(ChainAngleCut4Est), 2)
                 * math.pow(ChainStraightCut4Est, 2)
                 * math.pow(
-                    (math.tan(ChainAngleCut3Est) * math.cos(ChainAngleCut4Est))
-                    + math.sin(ChainAngleCut4Est),
-                    2,
+                    (math.tan(ChainAngleCut3Est) * math.cos(ChainAngleCut4Est)) + math.sin(ChainAngleCut4Est), 2,
                 )
             )
 
@@ -511,9 +417,7 @@ class TriangularCalibration(MakesmithInitFuncs):
 
             # Develop a printable motor Y offset value to update the user
 
-            motorYoffsetEstPrint = (
-                motorYcoordEst - distWorkareaTopToCut5 - (bitDiameter / 2) - 12.7
-            )
+            motorYoffsetEstPrint = motorYcoordEst - distWorkareaTopToCut5 - (bitDiameter / 2) - 12.7
 
             self.data.console_queue.put(
                 "N: "
@@ -550,12 +454,8 @@ class TriangularCalibration(MakesmithInitFuncs):
             # When we get close to correct values for motorYcoord and rotationRadius begin calibrating for chain sag
 
             if abs(ChainErrorCut1) < 1 and abs(ChainErrorCut2) < 1:
-                chainSagCorrectionEst -= (
-                    ChainErrorCut4 * chainSagCorrectionCorrectionScale
-                )
-                cut34YoffsetEst += (
-                    (ChainErrorCut3 + ChainErrorCut4) / 2
-                ) * cutYoffsetCorrectionScale
+                chainSagCorrectionEst -= ChainErrorCut4 * chainSagCorrectionCorrectionScale
+                cut34YoffsetEst += ((ChainErrorCut3 + ChainErrorCut4) / 2) * cutYoffsetCorrectionScale
                 if chainSagCorrectionEst < 0:
                     chainSagCorrectionEst = 0
 
@@ -572,15 +472,15 @@ class TriangularCalibration(MakesmithInitFuncs):
                 cut34YoffsetEst = 0
                 motorYcoordCorrectionScale = float(motorYcoordCorrectionScale / 2)
                 rotationRadiusCorrectionScale = float(rotationRadiusCorrectionScale / 2)
-                chainSagCorrectionCorrectionScale = float(
-                    chainSagCorrectionCorrectionScale / 2
-                )
+                chainSagCorrectionCorrectionScale = float(chainSagCorrectionCorrectionScale / 2)
                 cutYoffsetCorrectionScale = float(cutYoffsetCorrectionScale / 2)
                 self.data.console_queue.put("Estimated values out of range, trying again with smaller steps")
 
         if n == numberOfIterations:
-            self.data.ui_queue1.put("Alert", "Alert",
-                "Message: The machine was not able to be calibrated. Please ensure the work area dimensions are correct and try again."
+            self.data.ui_queue1.put(
+                "Alert",
+                "Alert",
+                "Message: The machine was not able to be calibrated. Please ensure the work area dimensions are correct and try again.",
             )
             self.data.console_queue.put("Machine parameters could not be determined")
 
@@ -588,9 +488,7 @@ class TriangularCalibration(MakesmithInitFuncs):
 
         self.data.console_queue.put("Machine parameters found:")
 
-        motorYoffsetEst = (
-            motorYcoordEst - distWorkareaTopToCut5 - (bitDiameter / 2) - 12.7
-        )
+        motorYoffsetEst = motorYcoordEst - distWorkareaTopToCut5 - (bitDiameter / 2) - 12.7
 
         motorYoffsetEst = round(motorYoffsetEst, 1)
         rotationRadiusEst = round(rotationRadiusEst, 1)
@@ -626,10 +524,9 @@ class TriangularCalibration(MakesmithInitFuncs):
         self.data.config.setValue('Maslow Settings', 'motorOffsetY', str(self.motorYoffsetEst))
         self.data.config.setValue('Advanced Settings', 'rotationRadius', str(self.rotationRadiusEst))
         self.data.config.setValue('Advanced Settings', 'chainSagCorrection', str(self.chainSagCorrectionEst))
-        
+
         self.data.gcode_queue.put("G21 ")
         self.data.gcode_queue.put("G90 ")
         self.data.gcode_queue.put("G40 ")
         self.data.gcode_queue.put("G0 X0 Y0 ")
         return True
-

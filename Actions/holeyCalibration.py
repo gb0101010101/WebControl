@@ -16,7 +16,6 @@ import datetime
 
 
 class HoleyCalibration(MakesmithInitFuncs):
-
     def __init__(self):
         # can't do much because data hasn't been initialized yet
         pass
@@ -38,18 +37,7 @@ class HoleyCalibration(MakesmithInitFuncs):
 
     # Chain lengths @ each hole
     ChainLengths = []
-    MeasurementMap = [
-        (1, 2),
-        (2, 3),
-        (4, 5),
-        (5, 6),
-        (1, 4),
-        (2, 5),
-        (3, 6),
-        (2, 4),
-        (1, 5),
-        (3, 5),
-        (2, 6)]
+    MeasurementMap = [(1, 2), (2, 3), (4, 5), (5, 6), (1, 4), (2, 5), (3, 6), (2, 4), (1, 5), (3, 5), (2, 6)]
     CutOrder = [1, 0, 3, 4, 5, 2]  # Counter Clockwise, starting at top
     IdealLengthArray = 0
     MeasuredLengthArray = 0
@@ -61,8 +49,9 @@ class HoleyCalibration(MakesmithInitFuncs):
     kin.isQuadKinematics = False
 
     # Define function with input of (ideal lengths and) machine parameters (delta) and output of length error
-    def LengthDeltaFromIdeal(self,
-                             DeltaArray):  # Del_D,Del_motorOffsetY,Del_rotationDiskRadius,Del_chainSagCorrection):
+    def LengthDeltaFromIdeal(
+        self, DeltaArray
+    ):  # Del_D,Del_motorOffsetY,Del_rotationDiskRadius,Del_chainSagCorrection):
         self.kin.D = self.SP_D + DeltaArray[0]
         self.kin.motorOffsetY = self.SP_motorOffsetY + DeltaArray[1]
         self.kin.leftChainTolerance = self.SP_leftChainTolerance + DeltaArray[2]
@@ -116,8 +105,13 @@ class HoleyCalibration(MakesmithInitFuncs):
             Measurements.append(self.GeometricLength(x1, y1, x2, y2))
         ToTopHole = 1
         Measurements.append(
-            self.GeometricLength(HolePositions[ToTopHole][0], HolePositions[ToTopHole][1], HolePositions[ToTopHole][0],
-                            self.kin.machineHeight / 2))
+            self.GeometricLength(
+                HolePositions[ToTopHole][0],
+                HolePositions[ToTopHole][1],
+                HolePositions[ToTopHole][0],
+                self.kin.machineHeight / 2,
+            )
+        )
 
         return numpy.array(Measurements)
 
@@ -132,20 +126,14 @@ class HoleyCalibration(MakesmithInitFuncs):
             self.SP_chainOverSprocket = 1
         else:
             self.SP_chainOverSprocket = 2
-        self.kin.machineHeight = float(self.data.config.getValue("Maslow Settings","bedHeight"))
-        self.kin.machineWidth = float(self.data.config.getValue("Maslow Settings","bedWidth"))
+        self.kin.machineHeight = float(self.data.config.getValue("Maslow Settings", "bedHeight"))
+        self.kin.machineWidth = float(self.data.config.getValue("Maslow Settings", "bedWidth"))
         workspaceHeight = self.kin.machineHeight
         workspaceWidth = self.kin.machineWidth
         aH1x = -(workspaceWidth / 2.0 - 254.0)
-        aH1y = (workspaceHeight / 2.0 - 254.0)
+        aH1y = workspaceHeight / 2.0 - 254.0
         aH2x = 0
-        IdealCoordinates = [
-            (aH1x, aH1y),
-            (aH2x, aH1y),
-            (-aH1x, aH1y),
-            (aH1x, -aH1y),
-            (aH2x, -aH1y),
-            (-aH1x, -aH1y)]
+        IdealCoordinates = [(aH1x, aH1y), (aH2x, aH1y), (-aH1x, aH1y), (aH1x, -aH1y), (aH2x, -aH1y), (-aH1x, -aH1y)]
         self.IdealCoordinates = IdealCoordinates
         self.kin.D = self.SP_D
         self.kin.motorOffsetY = self.SP_motorOffsetY
@@ -169,13 +157,14 @@ class HoleyCalibration(MakesmithInitFuncs):
         self.InitializeIdealXyCoordinates()
         measurements = self.processMeasurements(result)
         self.SetMeasurements(measurements)
-        self.OptimizationOutput = least_squares(self.LengthDeltaFromIdeal, numpy.array([0, 0, 0, 0]), jac='2-point',
-                                                diff_step=.1, ftol=1e-11)
+        self.OptimizationOutput = least_squares(
+            self.LengthDeltaFromIdeal, numpy.array([0, 0, 0, 0]), jac='2-point', diff_step=0.1, ftol=1e-11
+        )
         Deltas = self.OptimizationOutput.x
-        self.Opt_D = round(Deltas[0] + self.SP_D,5)
-        self.Opt_motorOffsetY = round(Deltas[1] + self.SP_motorOffsetY,5)
-        self.Opt_leftChainTolerance = round(Deltas[2] + self.SP_leftChainTolerance,5)
-        self.Opt_rightChainTolerance = round(Deltas[3] + self.SP_rightChainTolerance,5)
+        self.Opt_D = round(Deltas[0] + self.SP_D, 5)
+        self.Opt_motorOffsetY = round(Deltas[1] + self.SP_motorOffsetY, 5)
+        self.Opt_leftChainTolerance = round(Deltas[2] + self.SP_leftChainTolerance, 5)
+        self.Opt_rightChainTolerance = round(Deltas[3] + self.SP_rightChainTolerance, 5)
         self.kin.D = self.Opt_D
         self.kin.motorOffsetY = self.Opt_motorOffsetY
         self.kin.leftChainTolerance = self.Opt_leftChainTolerance
@@ -184,23 +173,26 @@ class HoleyCalibration(MakesmithInitFuncs):
         totalError = self.ReportCalibration()
         return self.Opt_motorOffsetY, self.Opt_D, self.Opt_leftChainTolerance, self.Opt_rightChainTolerance, totalError
 
-
     def ReportCalibration(self):
         self.data.console_queue.put('Optimized Errors')
         totalError = 0
         for idx, pts, ms, cal, er in zip(
-                range(self.MeasuredLengthArray.size),
-                self.MeasurementMap,
-                self.MeasuredLengthArray,
-                self.CalibratedLengths(),
-                self.CalibratedLengthError()):
-            self.data.console_queue.put(('\tIndex                : {}' +
-                   '\n\t\tPoints Span        : {} to {}' +
-                   '\n\t\tMeasured Distance  : {}' +
-                   '\n\t\tCalibrated Distance: {}' +
-                   '\n\t\tDistance Error     : {}').format(
-                idx, pts[0], pts[1], ms, cal, er))
-            totalError = totalError + er*er
+            range(self.MeasuredLengthArray.size),
+            self.MeasurementMap,
+            self.MeasuredLengthArray,
+            self.CalibratedLengths(),
+            self.CalibratedLengthError(),
+        ):
+            self.data.console_queue.put(
+                (
+                    '\tIndex                : {}'
+                    + '\n\t\tPoints Span        : {} to {}'
+                    + '\n\t\tMeasured Distance  : {}'
+                    + '\n\t\tCalibrated Distance: {}'
+                    + '\n\t\tDistance Error     : {}'
+                ).format(idx, pts[0], pts[1], ms, cal, er)
+            )
+            totalError = totalError + er * er
 
         totalError = math.sqrt(totalError)
         self.data.console_queue.put("")
@@ -258,49 +250,49 @@ class HoleyCalibration(MakesmithInitFuncs):
             self.data.console_queue.put(M1)
             measurements.append(M1)
         except:
-            self.data.message_queue.put("Message: Please enter a number for the distance M1." )
+            self.data.message_queue.put("Message: Please enter a number for the distance M1.")
             return False
         try:
             M2 = float(result["M2"])
             self.data.console_queue.put(M2)
             measurements.append(M2)
         except:
-            self.data.message_queue.put("Message: Please enter a number for the distance M2." )
+            self.data.message_queue.put("Message: Please enter a number for the distance M2.")
             return False
         try:
             M3 = float(result["M3"])
             self.data.console_queue.put(M3)
             measurements.append(M3)
         except:
-            self.data.message_queue.put("Message: Please enter a number for the distance M3." )
+            self.data.message_queue.put("Message: Please enter a number for the distance M3.")
             return False
         try:
             M4 = float(result["M4"])
             self.data.console_queue.put(M4)
             measurements.append(M4)
         except:
-            self.data.message_queue.put("Message: Please enter a number for the distance M4." )
+            self.data.message_queue.put("Message: Please enter a number for the distance M4.")
             return False
         try:
             M5 = float(result["M5"])
             self.data.console_queue.put(M5)
             measurements.append(M5)
         except:
-            self.data.message_queue.put("Message: Please enter a number for the distance M5." )
+            self.data.message_queue.put("Message: Please enter a number for the distance M5.")
             return False
         try:
             M6 = float(result["M6"])
             self.data.console_queue.put(M6)
             measurements.append(M6)
         except:
-            self.data.message_queue.put("Message: Please enter a number for the distance M6." )
+            self.data.message_queue.put("Message: Please enter a number for the distance M6.")
             return False
         try:
             M7 = float(result["M7"])
             self.data.console_queue.put(M7)
             measurements.append(M7)
         except:
-            self.data.message_queue.put("Message: Please enter a number for the distance M7." )
+            self.data.message_queue.put("Message: Please enter a number for the distance M7.")
             return False
         try:
             M8 = float(result["M8"])
@@ -314,33 +306,33 @@ class HoleyCalibration(MakesmithInitFuncs):
             self.data.console_queue.put(M9)
             measurements.append(M9)
         except:
-            self.data.message_queue.put("Message: Please enter a number for the distance M9." )
+            self.data.message_queue.put("Message: Please enter a number for the distance M9.")
             return False
         try:
             M10 = float(result["M10"])
             self.data.console_queue.put(M10)
             measurements.append(M10)
         except:
-            self.data.message_queue.put("Message: Please enter a number for the distance M10." )
+            self.data.message_queue.put("Message: Please enter a number for the distance M10.")
             return False
         try:
             M11 = float(result["M11"])
             self.data.console_queue.put(M11)
             measurements.append(M11)
         except:
-            self.data.message_queue.put("Message: Please enter a number for the distance M11." )
+            self.data.message_queue.put("Message: Please enter a number for the distance M11.")
             return False
         try:
             M12 = float(result["M12"])
             self.data.console_queue.put(M12)
             measurements.append(M12)
         except:
-            self.data.message_queue.put("Message: Please enter a number for the distance M12." )
+            self.data.message_queue.put("Message: Please enter a number for the distance M12.")
             return False
         return measurements
 
-    def GeometricLength(self,x1,y1,x2,y2):
-        return math.sqrt(math.pow(x1-x2,2) + math.pow(y1-y2,2))
+    def GeometricLength(self, x1, y1, x2, y2):
+        return math.sqrt(math.pow(x1 - x2, 2) + math.pow(y1 - y2, 2))
 
     def acceptCalibrationResults(self):
         self.data.config.setValue('Maslow Settings', 'motorOffsetY', str(self.Opt_motorOffsetY))
@@ -348,4 +340,3 @@ class HoleyCalibration(MakesmithInitFuncs):
         self.data.config.setValue('Advanced Settings', 'leftChainTolerance', str(self.Opt_leftChainTolerance))
         self.data.config.setValue('Advanced Settings', 'rightChainTolerance', str(self.Opt_rightChainTolerance))
         return True
-

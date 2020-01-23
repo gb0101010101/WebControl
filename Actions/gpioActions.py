@@ -4,7 +4,6 @@ from gpiozero import Device, Button, LED
 
 
 class GPIOActions(MakesmithInitFuncs):
-
     def __init__(self):
         pass
 
@@ -13,21 +12,33 @@ class GPIOActions(MakesmithInitFuncs):
     '''
     Buttons = []
     LEDs = []
-    actionList = ["", "WebMCP Running", "Shutdown", "Stop", "Pause", "Play", "Home", "Return to Center", "PlayLED", "PauseLED", "StopLED"]
+    actionList = [
+        "",
+        "WebMCP Running",
+        "Shutdown",
+        "Stop",
+        "Pause",
+        "Play",
+        "Home",
+        "Return to Center",
+        "PlayLED",
+        "PauseLED",
+        "StopLED",
+    ]
 
     def getActionList(self):
         return self.actionList
 
     def setup(self):
-        #self.setGPIOAction(2,"Stop")
+        # self.setGPIOAction(2,"Stop")
         setValues = self.data.config.getJSONSettingSection("GPIO Settings")
-        #print(setValues)
+        # print(setValues)
         for setting in setValues:
             if setting["value"] != "":
                 pinNumber = int(setting["key"][4:])
                 self.setGPIOAction(pinNumber, setting["value"])
 
-    def setGPIOAction(self,pin, action):
+    def setGPIOAction(self, pin, action):
         # first remove pin assignments if already made
         foundButton = None
         for button in self.Buttons:
@@ -52,10 +63,10 @@ class GPIOActions(MakesmithInitFuncs):
             button = Button(pin)
             button.when_pressed = pinAction
             self.Buttons.append(button)
-            print("set Button with action: "+action)
+            print("set Button with action: " + action)
         if type == "led":
             _led = LED(pin)
-            led = (action,_led)
+            led = (action, _led)
             self.LEDs.append(led)
             print("set LED with action: " + action)
 
@@ -85,4 +96,3 @@ class GPIOActions(MakesmithInitFuncs):
         if action == "StopLED" and onoff == "on":
             self.causeAction("PauseLED", "off")
             self.causeAction("PlayLED", "off")
-

@@ -46,7 +46,7 @@ class Kinematics(MakesmithInitFuncs):
     TanLambda = 0
     Y1Plus = 0
     Y2Plus = 0
-    if (l < 1.0):
+    if l < 1.0:
         Theta = 0
     else:
         Theta = math.atan(2 * s / l)
@@ -85,7 +85,7 @@ class Kinematics(MakesmithInitFuncs):
 
     leftChainTolerance = 0
     rightChainTolerance = 0
-    chainDensity = .0013  # N/mm
+    chainDensity = 0.0013  # N/mm
     chainElasticity = 5.1685e-6  # mm/mm/N
     sledWeight = 97.9  # N
 
@@ -101,16 +101,16 @@ class Kinematics(MakesmithInitFuncs):
     def _verifyValidTarget(self, xTarget, yTarget):
         # If the target point is beyond one of the edges of the board, the machine stops at the edge
 
-        if (xTarget < -self.machineWidth / 2):
+        if xTarget < -self.machineWidth / 2:
             xTarget = -self.machineWidth / 2
 
-        elif (xTarget > self.machineWidth / 2):
+        elif xTarget > self.machineWidth / 2:
             xTarget = self.machineWidth / 2
 
-        elif (yTarget > self.machineHeight / 2):
+        elif yTarget > self.machineHeight / 2:
             yTarget = self.machineHeight / 2
 
-        elif (yTarget < -self.machineHeight / 2):
+        elif yTarget < -self.machineHeight / 2:
             yTarget = -self.machineHeight / 2
 
     def recomputeGeometry(self):
@@ -150,16 +150,20 @@ class Kinematics(MakesmithInitFuncs):
         self._verifyValidTarget(xTarget, yTarget)
 
         Motor1Distance = math.sqrt(
-            math.pow((-1 * self._xCordOfMotor - xTarget), 2) + math.pow((self._yCordOfMotor - yTarget), 2))
+            math.pow((-1 * self._xCordOfMotor - xTarget), 2) + math.pow((self._yCordOfMotor - yTarget), 2)
+        )
         Motor2Distance = math.sqrt(
-            math.pow((self._xCordOfMotor - xTarget), 2) + math.pow((self._yCordOfMotor - yTarget), 2))
+            math.pow((self._xCordOfMotor - xTarget), 2) + math.pow((self._yCordOfMotor - yTarget), 2)
+        )
 
         # Calculate the chain angles from horizontal, based on if the chain connects to the sled from the top or bottom of the sprocket
         if self.chainOverSprocket == 1:
             Chain1Angle = math.asin((self._yCordOfMotor - yTarget) / Motor1Distance) + math.asin(
-                self.R / Motor1Distance)
+                self.R / Motor1Distance
+            )
             Chain2Angle = math.asin((self._yCordOfMotor - yTarget) / Motor2Distance) + math.asin(
-                self.R / Motor2Distance)
+                self.R / Motor2Distance
+            )
 
             Chain1AroundSprocket = self.R * Chain1Angle
             Chain2AroundSprocket = self.R * Chain2Angle
@@ -171,9 +175,11 @@ class Kinematics(MakesmithInitFuncs):
             yTangent2 = self._yCordOfMotor + self.R * math.cos(Chain2Angle)
         else:
             Chain1Angle = math.asin((self._yCordOfMotor - yTarget) / Motor1Distance) - math.asin(
-                self.R / Motor1Distance)
+                self.R / Motor1Distance
+            )
             Chain2Angle = math.asin((self._yCordOfMotor - yTarget) / Motor2Distance) - math.asin(
-                self.R / Motor2Distance)
+                self.R / Motor2Distance
+            )
 
             Chain1AroundSprocket = self.R * (3.14159 - Chain1Angle)
             Chain2AroundSprocket = self.R * (3.14159 - Chain2Angle)
@@ -190,18 +196,33 @@ class Kinematics(MakesmithInitFuncs):
 
         # TensionDenominator=(x_l       y_r-      x_r       y_l-      x_l       y_t     +x_t    y_l      +x_r       y_t    -x_t     y_r)
         TensionDenominator = (
-                    xTangent1 * yTangent2 - xTangent2 * yTangent1 - xTangent1 * yTarget + xTarget * yTangent1 + xTangent2 * yTarget - xTarget * yTangent2)
+            xTangent1 * yTangent2
+            - xTangent2 * yTangent1
+            - xTangent1 * yTarget
+            + xTarget * yTangent1
+            + xTangent2 * yTarget
+            - xTarget * yTangent2
+        )
 
         # Total vertical force is sled weight, plus half the two chain weights
         TotalWeight = self.sledWeight + 0.5 * self.chainDensity * (Chain1Straight + Chain2Straight)
 
         # T_l     = -(    w                *sqrt(     pow(x_l      -x_t    ,2.0)+pow(     y_l      -y_t    ,2.0))  (x_r      -x_t))    /TensionDenominator
-        Tension1 = - (TotalWeight * math.sqrt(math.pow(xTangent1 - xTarget, 2) + math.pow(yTangent1 - yTarget, 2)) * (
-                    xTangent2 - xTarget)) / TensionDenominator
+        Tension1 = (
+            -(
+                TotalWeight
+                * math.sqrt(math.pow(xTangent1 - xTarget, 2) + math.pow(yTangent1 - yTarget, 2))
+                * (xTangent2 - xTarget)
+            )
+            / TensionDenominator
+        )
 
         # T_r     = (   w                *sqrt(     pow(x_r      -x_t    ,2.0)+pow(     y_r      -y_t    ,2.0))  (x_l      -x_t))/(x_ly_r-x_ry_l-x_ly_t+x_ty_l+x_ry_t-x_ty_r)
-        Tension2 = (TotalWeight * math.sqrt(math.pow(xTangent2 - xTarget, 2) + math.pow(yTangent2 - yTarget, 2)) * (
-                    xTangent1 - xTarget)) / TensionDenominator
+        Tension2 = (
+            TotalWeight
+            * math.sqrt(math.pow(xTangent2 - xTarget, 2) + math.pow(yTangent2 - yTarget, 2))
+            * (xTangent1 - xTarget)
+        ) / TensionDenominator
 
         HorizontalTension = Tension1 * (xTarget - xTangent1) / Chain1Straight
 
@@ -218,9 +239,11 @@ class Kinematics(MakesmithInitFuncs):
 
         # Catenary Equation
         Chain1 = math.sqrt(
-            math.pow(2 * a1 * math.sinh((xTarget - xTangent1) / (2 * a1)), 2) + math.pow(yTangent1 - yTarget, 2))
+            math.pow(2 * a1 * math.sinh((xTarget - xTangent1) / (2 * a1)), 2) + math.pow(yTangent1 - yTarget, 2)
+        )
         Chain2 = math.sqrt(
-            math.pow(2 * a2 * math.sinh((xTangent2 - xTarget) / (2 * a2)), 2) + math.pow(yTangent2 - yTarget, 2))
+            math.pow(2 * a2 * math.sinh((xTangent2 - xTarget) / (2 * a2)), 2) + math.pow(yTangent2 - yTarget, 2)
+        )
         CatenaryDelta1 = Chain1 - Chain1Straight
         CatenaryDelta2 = Chain2 - Chain2Straight
         # print("Catenary Delta 1 ",CatenaryDelta1)
@@ -233,9 +256,11 @@ class Kinematics(MakesmithInitFuncs):
         # print("Chain2 Elasticity Delta ",Chain2ElasticityDelta)
 
         Chain1 = Chain1AroundSprocket + Chain1 / (1.0 + self.leftChainTolerance / 100.0) / (
-                    1 + Tension1 * self.chainElasticity)
+            1 + Tension1 * self.chainElasticity
+        )
         Chain2 = Chain2AroundSprocket + Chain2 / (1.0 + self.rightChainTolerance / 100.0) / (
-                    1 + Tension2 * self.chainElasticity)
+            1 + Tension2 * self.chainElasticity
+        )
 
         # Subtract of the virtual length which is added to the chain by the rotation mechanism
         Chain1 = Chain1 - self.rotationDiskRadius
@@ -266,7 +291,8 @@ class Kinematics(MakesmithInitFuncs):
 
         Tries = 0  # initialize
         if (
-                self.x > self.D / 2.0):  # the right half of the board mirrors the left half so all computations are done  using left half coordinates.
+            self.x > self.D / 2.0
+        ):  # the right half of the board mirrors the left half so all computations are done  using left half coordinates.
             self.x = self.D - self.x  # Chain lengths are swapped at exit if the x,y is on the right half
             self.Mirror = True
 
@@ -284,15 +310,16 @@ class Kinematics(MakesmithInitFuncs):
         # These criteria will be zero when the correct values are reached
         # They are negated here as a numerical efficiency expedient
 
-        self.Crit[0] = - self._moment(self.Y1Plus, self.Y2Plus, self.Phi, self.MySinPhi, self.SinPsi1, self.CosPsi1,
-                                      self.SinPsi2, self.CosPsi2)
-        self.Crit[1] = - self._YOffsetEqn(self.Y1Plus, self.x - self.h * self.CosPsi1, self.SinPsi1)
-        self.Crit[2] = - self._YOffsetEqn(self.Y2Plus, self.D - (self.x + self.h * self.CosPsi2), self.SinPsi2)
+        self.Crit[0] = -self._moment(
+            self.Y1Plus, self.Y2Plus, self.Phi, self.MySinPhi, self.SinPsi1, self.CosPsi1, self.SinPsi2, self.CosPsi2
+        )
+        self.Crit[1] = -self._YOffsetEqn(self.Y1Plus, self.x - self.h * self.CosPsi1, self.SinPsi1)
+        self.Crit[2] = -self._YOffsetEqn(self.Y2Plus, self.D - (self.x + self.h * self.CosPsi2), self.SinPsi2)
 
-        while (Tries <= self.MaxTries):
-            if (abs(self.Crit[0]) < self.MaxError):
-                if (abs(self.Crit[1]) < self.MaxError):
-                    if (abs(self.Crit[2]) < self.MaxError):
+        while Tries <= self.MaxTries:
+            if abs(self.Crit[0]) < self.MaxError:
+                if abs(self.Crit[1]) < self.MaxError:
+                    if abs(self.Crit[2]) < self.MaxError:
                         break
 
                     # estimate the tilt angle that results in zero net _moment about the pen
@@ -300,28 +327,76 @@ class Kinematics(MakesmithInitFuncs):
 
                     # Estimate the Jacobian components
 
-            self.Jac[0] = (self._moment(self.Y1Plus, self.Y2Plus, self.Phi + self.DeltaPhi, self.MySinPhiDelta,
-                                        self.SinPsi1D, self.CosPsi1D, self.SinPsi2D, self.CosPsi2D) + self.Crit[
-                               0]) / self.DeltaPhi
-            self.Jac[1] = (self._moment(self.Y1Plus + self.DeltaY, self.Y2Plus, self.Phi, self.MySinPhi, self.SinPsi1,
-                                        self.CosPsi1, self.SinPsi2, self.CosPsi2) + self.Crit[0]) / self.DeltaY
-            self.Jac[2] = (self._moment(self.Y1Plus, self.Y2Plus + self.DeltaY, self.Phi, self.MySinPhi, self.SinPsi1,
-                                        self.CosPsi1, self.SinPsi2, self.CosPsi2) + self.Crit[0]) / self.DeltaY
-            self.Jac[3] = (self._YOffsetEqn(self.Y1Plus, self.x - self.h * self.CosPsi1D, self.SinPsi1D) + self.Crit[
-                1]) / self.DeltaPhi
-            self.Jac[4] = (self._YOffsetEqn(self.Y1Plus + self.DeltaY, self.x - self.h * self.CosPsi1, self.SinPsi1) +
-                           self.Crit[1]) / self.DeltaY
+            self.Jac[0] = (
+                self._moment(
+                    self.Y1Plus,
+                    self.Y2Plus,
+                    self.Phi + self.DeltaPhi,
+                    self.MySinPhiDelta,
+                    self.SinPsi1D,
+                    self.CosPsi1D,
+                    self.SinPsi2D,
+                    self.CosPsi2D,
+                )
+                + self.Crit[0]
+            ) / self.DeltaPhi
+            self.Jac[1] = (
+                self._moment(
+                    self.Y1Plus + self.DeltaY,
+                    self.Y2Plus,
+                    self.Phi,
+                    self.MySinPhi,
+                    self.SinPsi1,
+                    self.CosPsi1,
+                    self.SinPsi2,
+                    self.CosPsi2,
+                )
+                + self.Crit[0]
+            ) / self.DeltaY
+            self.Jac[2] = (
+                self._moment(
+                    self.Y1Plus,
+                    self.Y2Plus + self.DeltaY,
+                    self.Phi,
+                    self.MySinPhi,
+                    self.SinPsi1,
+                    self.CosPsi1,
+                    self.SinPsi2,
+                    self.CosPsi2,
+                )
+                + self.Crit[0]
+            ) / self.DeltaY
+            self.Jac[3] = (
+                self._YOffsetEqn(self.Y1Plus, self.x - self.h * self.CosPsi1D, self.SinPsi1D) + self.Crit[1]
+            ) / self.DeltaPhi
+            self.Jac[4] = (
+                self._YOffsetEqn(self.Y1Plus + self.DeltaY, self.x - self.h * self.CosPsi1, self.SinPsi1) + self.Crit[1]
+            ) / self.DeltaY
             self.Jac[5] = 0.0
-            self.Jac[6] = (self._YOffsetEqn(self.Y2Plus, self.D - (self.x + self.h * self.CosPsi2D), self.SinPsi2D) +
-                           self.Crit[2]) / self.DeltaPhi
+            self.Jac[6] = (
+                self._YOffsetEqn(self.Y2Plus, self.D - (self.x + self.h * self.CosPsi2D), self.SinPsi2D) + self.Crit[2]
+            ) / self.DeltaPhi
             self.Jac[7] = 0.0
-            self.Jac[8] = (self._YOffsetEqn(self.Y2Plus + self.DeltaY, self.D - (self.x + self.h * self.CosPsi2D),
-                                            self.SinPsi2) + self.Crit[2]) / self.DeltaY
+            self.Jac[8] = (
+                self._YOffsetEqn(self.Y2Plus + self.DeltaY, self.D - (self.x + self.h * self.CosPsi2D), self.SinPsi2)
+                + self.Crit[2]
+            ) / self.DeltaY
 
             # solve for the next guess
 
-            buildOutJac = self._moment(self.Y1Plus + self.DeltaY, self.Y2Plus, self.Phi, self.MySinPhi, self.SinPsi1,
-                                       self.CosPsi1, self.SinPsi2, self.CosPsi2) + self.Crit[0]
+            buildOutJac = (
+                self._moment(
+                    self.Y1Plus + self.DeltaY,
+                    self.Y2Plus,
+                    self.Phi,
+                    self.MySinPhi,
+                    self.SinPsi1,
+                    self.CosPsi1,
+                    self.SinPsi2,
+                    self.CosPsi2,
+                )
+                + self.Crit[0]
+            )
 
             self._MatSolv()  # solves the matrix equation Jx=-Criterion
 
@@ -329,11 +404,11 @@ class Kinematics(MakesmithInitFuncs):
 
             self.Phi = self.Phi + self.Solution[0]
             self.Y1Plus = self.Y1Plus + self.Solution[1]  # don't allow the anchor points to be inside a sprocket
-            if (self.Y1Plus < self.R):
+            if self.Y1Plus < self.R:
                 self.Y1Plus = self.R
 
             self.Y2Plus = self.Y2Plus + self.Solution[2]  # don't allow the anchor points to be inside a sprocke
-            if (self.Y2Plus < self.R):
+            if self.Y2Plus < self.R:
                 self.Y2Plus = self.R
 
             self.Psi1 = self.Theta - self.Phi
@@ -343,13 +418,21 @@ class Kinematics(MakesmithInitFuncs):
             # three criterion equations
             self._MyTrig()
 
-            self.Crit[0] = - self._moment(self.Y1Plus, self.Y2Plus, self.Phi, self.MySinPhi, self.SinPsi1, self.CosPsi1,
-                                          self.SinPsi2, self.CosPsi2)
-            self.Crit[1] = - self._YOffsetEqn(self.Y1Plus, self.x - self.h * self.CosPsi1, self.SinPsi1)
-            self.Crit[2] = - self._YOffsetEqn(self.Y2Plus, self.D - (self.x + self.h * self.CosPsi2), self.SinPsi2)
+            self.Crit[0] = -self._moment(
+                self.Y1Plus,
+                self.Y2Plus,
+                self.Phi,
+                self.MySinPhi,
+                self.SinPsi1,
+                self.CosPsi1,
+                self.SinPsi2,
+                self.CosPsi2,
+            )
+            self.Crit[1] = -self._YOffsetEqn(self.Y1Plus, self.x - self.h * self.CosPsi1, self.SinPsi1)
+            self.Crit[2] = -self._YOffsetEqn(self.Y2Plus, self.D - (self.x + self.h * self.CosPsi2), self.SinPsi2)
             Tries = Tries + 1  # increment itteration count
 
-        if (Tries > self.MaxTries):
+        if Tries > self.MaxTries:
             print("unable to calculate chain lengths")
 
         # Variables are within accuracy limits
@@ -366,20 +449,40 @@ class Kinematics(MakesmithInitFuncs):
 
         # compute the chain lengths
 
-        if (self.Mirror):
-            Chain2 = math.sqrt(
-                (self.x - self.Offsetx1) * (self.x - self.Offsetx1) + (self.y + self.Y1Plus - self.Offsety1) * (
-                            self.y + self.Y1Plus - self.Offsety1)) - self.R * self.TanGamma + self.R * self.Gamma  # right chain length
-            Chain1 = math.sqrt((self.D - (self.x + self.Offsetx2)) * (self.D - (self.x + self.Offsetx2)) + (
-                        self.y + self.Y2Plus - self.Offsety2) * (
-                                           self.y + self.Y2Plus - self.Offsety2)) - self.R * self.TanLambda + self.R * self.Lambda  # left chain length
+        if self.Mirror:
+            Chain2 = (
+                math.sqrt(
+                    (self.x - self.Offsetx1) * (self.x - self.Offsetx1)
+                    + (self.y + self.Y1Plus - self.Offsety1) * (self.y + self.Y1Plus - self.Offsety1)
+                )
+                - self.R * self.TanGamma
+                + self.R * self.Gamma
+            )  # right chain length
+            Chain1 = (
+                math.sqrt(
+                    (self.D - (self.x + self.Offsetx2)) * (self.D - (self.x + self.Offsetx2))
+                    + (self.y + self.Y2Plus - self.Offsety2) * (self.y + self.Y2Plus - self.Offsety2)
+                )
+                - self.R * self.TanLambda
+                + self.R * self.Lambda
+            )  # left chain length
         else:
-            Chain1 = math.sqrt(
-                (self.x - self.Offsetx1) * (self.x - self.Offsetx1) + (self.y + self.Y1Plus - self.Offsety1) * (
-                            self.y + self.Y1Plus - self.Offsety1)) - self.R * self.TanGamma + self.R * self.Gamma  # left chain length
-            Chain2 = math.sqrt((self.D - (self.x + self.Offsetx2)) * (self.D - (self.x + self.Offsetx2)) + (
-                        self.y + self.Y2Plus - self.Offsety2) * (
-                                           self.y + self.Y2Plus - self.Offsety2)) - self.R * self.TanLambda + self.R * self.Lambda  # right chain length
+            Chain1 = (
+                math.sqrt(
+                    (self.x - self.Offsetx1) * (self.x - self.Offsetx1)
+                    + (self.y + self.Y1Plus - self.Offsety1) * (self.y + self.Y1Plus - self.Offsety1)
+                )
+                - self.R * self.TanGamma
+                + self.R * self.Gamma
+            )  # left chain length
+            Chain2 = (
+                math.sqrt(
+                    (self.D - (self.x + self.Offsetx2)) * (self.D - (self.x + self.Offsetx2))
+                    + (self.y + self.Y2Plus - self.Offsety2) * (self.y + self.Y2Plus - self.Offsety2)
+                )
+                - self.R * self.TanLambda
+                + self.R * self.Lambda
+            )  # right chain length
 
         aChainLength = Chain1
         bChainLength = Chain2
@@ -387,7 +490,7 @@ class Kinematics(MakesmithInitFuncs):
 
         return aChainLength, bChainLength
 
-    def forward(self, chainALength, chainBLength, xGuess = -10, yGuess = 10):
+    def forward(self, chainALength, chainBLength, xGuess=-10, yGuess=10):
         '''
 
         Take the chain lengths and return an XY position
@@ -402,7 +505,7 @@ class Kinematics(MakesmithInitFuncs):
 
         guessCount = 0
 
-        while (1):
+        while 1:
 
             # check our guess
             guessLengthA, guessLengthB = self.inverse(xGuess, yGuess)
@@ -413,8 +516,8 @@ class Kinematics(MakesmithInitFuncs):
             # print 'guess {:7.3f} {:7.3f} error {:7.3f} {:7.3f} guesslength {:7.3f} {:7.3f} '.format(xGuess,yGuess,aChainError,bChainError,guessLengthA, guessLengthB)
 
             # if we've converged on the point...or it's time to give up, exit the loop
-            if ((abs(aChainError) < .000000001 and abs(bChainError) < .000000001) or guessCount > 5000):
-                if (guessCount > 5000):
+            if (abs(aChainError) < 0.000000001 and abs(bChainError) < 0.000000001) or guessCount > 5000:
+                if guessCount > 5000:
                     print
                     "Message: Unable to find valid machine position. Please calibrate chain lengths.", aChainError, bChainError, xGuess, yGuess
                     return xGuess, yGuess
@@ -422,8 +525,8 @@ class Kinematics(MakesmithInitFuncs):
                     return xGuess, yGuess
             else:
                 # adjust the guess based on the result
-                xGuess = xGuess + .1 * aChainError - .1 * bChainError
-                yGuess = yGuess - .1 * aChainError - .1 * bChainError
+                xGuess = xGuess + 0.1 * aChainError - 0.1 * bChainError
+                yGuess = yGuess - 0.1 * aChainError - 0.1 * bChainError
                 guessCount = guessCount + 1
 
     def _MatSolv(self):
@@ -450,20 +553,20 @@ class Kinematics(MakesmithInitFuncs):
         N = 3
         NN = N - 1
         i = 1
-        while (i <= NN):
-            J = (N + 1 - i)
+        while i <= NN:
+            J = N + 1 - i
             JJ = (J - 1) * N - 1
             L = J - 1
             KK = -1
             K = 0
-            while (K < L):
-                fact = self.Jac[KK + J] / self.Jac[JJ + J];
+            while K < L:
+                fact = self.Jac[KK + J] / self.Jac[JJ + J]
                 M = 1
-                while (M <= J):
+                while M <= J:
                     self.Jac[KK + M] = self.Jac[KK + M] - fact * self.Jac[JJ + M]
                     M = M + 1
-                KK = KK + N;
-                self.Crit[K] = self.Crit[K] - fact * self.Crit[J - 1];
+                KK = KK + N
+                self.Crit[K] = self.Crit[K] - fact * self.Crit[J - 1]
                 K = K + 1
             i = i + 1
 
@@ -473,22 +576,23 @@ class Kinematics(MakesmithInitFuncs):
         ii = N - 1
 
         i = 2
-        while (i <= N):
-            M = i - 1;
-            Sum = self.Crit[i - 1];
+        while i <= N:
+            M = i - 1
+            Sum = self.Crit[i - 1]
 
             J = 1
-            while (J <= M):
-                Sum = Sum - self.Jac[ii + J] * self.Solution[J - 1];
+            while J <= M:
+                Sum = Sum - self.Jac[ii + J] * self.Solution[J - 1]
                 J = J + 1
 
-            self.Solution[i - 1] = Sum / self.Jac[ii + i];
-            ii = ii + N;
+            self.Solution[i - 1] = Sum / self.Jac[ii + i]
+            ii = ii + N
 
             i = i + 1
 
-    def _moment(self, Y1Plus, Y2Plus, Phi, MSinPhi, MSinPsi1, MCosPsi1, MSinPsi2,
-                MCosPsi2):  # computes net moment about center of mass
+    def _moment(
+        self, Y1Plus, Y2Plus, Phi, MSinPhi, MSinPsi1, MCosPsi1, MSinPsi2, MCosPsi2
+    ):  # computes net moment about center of mass
         '''Temp
         Offsetx1
         Offsetx2
@@ -510,7 +614,8 @@ class Kinematics(MakesmithInitFuncs):
         self.TanLambda = (self.y - self.Offsety2 + Y2Plus) / (self.D - (self.x + self.Offsetx2))
 
         return self.h3 * MSinPhi + (self.h / (self.TanLambda + self.TanGamma)) * (
-                    MSinPsi2 - MSinPsi1 + (self.TanGamma * MCosPsi1 - self.TanLambda * MCosPsi2))
+            MSinPsi2 - MSinPsi1 + (self.TanGamma * MCosPsi1 - self.TanLambda * MCosPsi2)
+        )
 
     def _MyTrig(self):
 
@@ -545,8 +650,9 @@ class Kinematics(MakesmithInitFuncs):
 
     def _YOffsetEqn(self, YPlus, Denominator, Psi):
 
-        Temp = ((math.sqrt(YPlus * YPlus - self.R * self.R) / self.R) - (
-                    self.y + YPlus - self.h * math.sin(Psi)) / Denominator)
+        Temp = (math.sqrt(YPlus * YPlus - self.R * self.R) / self.R) - (
+            self.y + YPlus - self.h * math.sin(Psi)
+        ) / Denominator
         return Temp
 
     def updateSetting(self, firmwareKey, value):
@@ -554,7 +660,7 @@ class Kinematics(MakesmithInitFuncs):
         if firmwareKey == 2:
             self.D = float(value)
         elif firmwareKey == 13:
-            self.R = float(value/3.141592/2)
+            self.R = float(value / 3.141592 / 2)
         elif firmwareKey == 1:
             self.machineHeight = float(value)
         elif firmwareKey == 0:
@@ -584,9 +690,9 @@ class Kinematics(MakesmithInitFuncs):
         self._yCordOfMotor = self.machineHeight / 2 + self.motorOffsetY
 
     def initializeSettings(self):
-        self.D = float(self.data.config.getValue("Maslow Settings","motorSpacingX"))
-        self.R = float(self.data.config.getValue("Computed Settings","distPerRot"))/3.141592/2
-        self.machineHeight = float(self.data.config.getValue("Maslow Settings","bedHeight"))
+        self.D = float(self.data.config.getValue("Maslow Settings", "motorSpacingX"))
+        self.R = float(self.data.config.getValue("Computed Settings", "distPerRot")) / 3.141592 / 2
+        self.machineHeight = float(self.data.config.getValue("Maslow Settings", "bedHeight"))
         self.machineWidth = float(self.data.config.getValue("Maslow Settings", "bedWidth"))
         self.motorOffsetY = float(self.data.config.getValue("Maslow Settings", "motorOffsetY"))
         self.leftChainTolerance = float(self.data.config.getValue("Advanced Settings", "leftChainTolerance"))
@@ -601,6 +707,3 @@ class Kinematics(MakesmithInitFuncs):
             self.isQuadKinematics = True
         else:
             self.isQuadKinematics = False
-
-
-
