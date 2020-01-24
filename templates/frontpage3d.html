@@ -21,42 +21,42 @@
         <div>
         <div class="controls row">
           <div class="col-3 mb-1">
-            <button type="button" class="btn btn-secondary btn-block disabler" onclick="moveAction('upLeft')"><i data-feather="arrow-up-left"></i></button>
+            <button type="button" class="btn btn-secondary btn-block state-play state-pause disabler" onclick="moveAction('upLeft')"><i data-feather="arrow-up-left"></i></button>
           </div>
           <div class="col-3 mb-1">
-            <button type="button" class="btn btn-dark btn-block" onclick="moveAction('up')"><i data-feather="arrow-up"></i></button>
+            <button type="button" class="btn btn-dark btn-block state-play state-pause" onclick="moveAction('up')"><i data-feather="arrow-up"></i></button>
           </div>
           <div class="col-3 mb-1">
-            <button type="button" class="btn btn-secondary btn-block" onclick="moveAction('upRight')"><i data-feather="arrow-up-right"></i></button>
+            <button type="button" class="btn btn-secondary btn-block state-play state-pause" onclick="moveAction('upRight')"><i data-feather="arrow-up-right"></i></button>
           </div>
           <div class="col-3 mb-1">
-            <button type="button" class="btn btn-primary btn-block" onclick="action('macro1')">Macro1</button>
-          </div>
-          <div class="w-100"></div>
-          <div class="col-3 mb-1">
-            <button type="button" class="btn btn-dark btn-block" onclick="moveAction('left')"><i data-feather="arrow-left"></i></button>
-          </div>
-          <div class="col-3 mb-1">
-            <button type="button" class="btn btn-dark btn-block" onclick="action('home')"><i data-feather="home"></i></button>
-          </div>
-          <div class="col-3 mb-1">
-            <button type="button" class="btn btn-dark btn-block" onclick="moveAction('right')"><i data-feather="arrow-right"></i></button>
-          </div>
-          <div class="col-3 mb-1">
-            <button type="button" class="btn btn-primary btn-block" onclick="action('macro2')">Macro2</button>
+            <button type="button" class="btn btn-primary btn-block state-play" onclick="action('macro1')">Macro1</button>
           </div>
           <div class="w-100"></div>
           <div class="col-3 mb-1">
-            <button type="button" class="btn btn-secondary btn-block" onclick="moveAction('downLeft')"><i data-feather="arrow-down-left"></i></button>
+            <button type="button" class="btn btn-dark btn-block state-play state-pause" onclick="moveAction('left')"><i data-feather="arrow-left"></i></button>
           </div>
           <div class="col-3 mb-1">
-            <button type="button" class="btn btn-dark btn-block" onclick="moveAction('down')"><i data-feather="arrow-down"></i></button>
+            <button type="button" class="btn btn-dark btn-block state-play state-pause" onclick="action('home')"><i data-feather="home"></i></button>
           </div>
           <div class="col-3 mb-1">
-            <button type="button" class="btn btn-secondary btn-block" onclick="moveAction('downRight')"><i data-feather="arrow-down-right"></i></button>
+            <button type="button" class="btn btn-dark btn-block state-play state-pause" onclick="moveAction('right')"><i data-feather="arrow-right"></i></button>
           </div>
           <div class="col-3 mb-1">
-            <button type="button" class="btn btn-primary btn-block" onclick="requestPage('zAxis');">ZAxis</button>
+            <button type="button" class="btn btn-primary btn-block state-play" onclick="action('macro2')">Macro2</button>
+          </div>
+          <div class="w-100"></div>
+          <div class="col-3 mb-1">
+            <button type="button" class="btn btn-secondary btn-block state-play state-pause" onclick="moveAction('downLeft')"><i data-feather="arrow-down-left"></i></button>
+          </div>
+          <div class="col-3 mb-1">
+            <button type="button" class="btn btn-dark btn-block state-play state-pause" onclick="moveAction('down')"><i data-feather="arrow-down"></i></button>
+          </div>
+          <div class="col-3 mb-1">
+            <button type="button" class="btn btn-secondary btn-block state-play state-pause" onclick="moveAction('downRight')"><i data-feather="arrow-down-right"></i></button>
+          </div>
+          <div class="col-3 mb-1">
+            <button type="button" class="btn btn-primary btn-block state-play state-pause" onclick="requestPage('zAxis');">ZAxis</button>
           </div>
           <div class="w-100"></div>
           <div class="col-3 mb-1">
@@ -66,10 +66,10 @@
             <form id="distInput" onsubmit="return false;"><input class="form-control" type="text" pattern="^[0-9]*(\.[0-9]{0,3})?$" id="distToMove" title="Positive number with maximum 3 decimal places"></form>
           </div>
           <div class="col-3 mb-1">
-            <button id="units" type="button" class="btn btn-secondary" onclick="unitSwitch();">--</button>
+            <button id="units" type="button" class="btn btn-secondary state-play state-pause" onclick="unitSwitch();">--</button>
           </div>
           <div class="col-3 mb-1">
-            <button id="btnDefHome" type="button" class="btn btn-primary btn-block" onclick="action('defineHome')" ><i data-feather="save">Def.</i> <i data-feather="home">Home</i></button>
+            <button id="btnDefHome" type="button" class="btn btn-primary btn-block state-play" onclick="action('defineHome')" ><i data-feather="save">Def.</i> <i data-feather="home">Home</i></button>
           </div>
         </div>
         <div class="row">
@@ -79,27 +79,27 @@
         </div>
         <div class="row">
           <div class="col mb-1">
-            <button type="button" class="btn btn-block btn-success" onclick="action('startRun')">Play</button>
+            <button type="button" class="btn btn-block btn-success state-play" onclick="action('startRun'); uiState('play')">Play</button>
           </div>
           <div class="col mb-1">
-            <button type="button" id="pauseButton" class="btn btn-block btn-warning" onclick="pauseRun()">Pause</button>
+            <button type="button" id="pauseButton" class="btn btn-block btn-warning" onclick="pauseRun()" disabled>Pause</button>
           </div>
           <div class="col mb-1">
-            <button type="button" id="stopButton" class="btn btn-block btn-danger" onclick="$(this).removeClass('stopbutton'); action('stopRun')">Stop</button>
+            <button type="button" id="stopButton" class="btn btn-block btn-danger" onclick="$(this).removeClass('stopbutton'); action('stopRun'); uiState('stop');">Stop</button>
           </div>
         </div>
         <div class="row">
           <div class="col mb-1">
-            <button type="button" class="btn btn-block btn-secondary" onclick="action('moveGcodeZ',-1);">&lt;Z</button>
+            <button type="button" class="btn btn-block btn-secondary state-play state-pause" onclick="action('moveGcodeZ',-1);">&lt;Z</button>
           </div>
           <div class="col mb-1">
-            <button type="button" class="btn btn-block btn-secondary" onclick="action('moveGcodeIndex',-1);">&lt;1</button>
+            <button type="button" class="btn btn-block btn-secondary state-play state-pause" onclick="action('moveGcodeIndex',-1);">&lt;1</button>
           </div>
           <div class="col mb-1">
-            <button type="button" class="btn btn-block btn-secondary" onclick="action('moveGcodeIndex',1);">1&gt;</button>
+            <button type="button" class="btn btn-block btn-secondary state-play state-pause" onclick="action('moveGcodeIndex',1);">1&gt;</button>
           </div>
           <div class="col mb-1">
-            <button type="button" class="btn btn-block btn-secondary" onclick="action('moveGcodeZ',1);">Z&gt;</button>
+            <button type="button" class="btn btn-block btn-secondary state-play state-pause" onclick="action('moveGcodeZ',1);">Z&gt;</button>
           </div>
         </div>
         <div class="row align-items-center">
@@ -110,7 +110,7 @@
             <input class="form-control" type="number" id="gcodeLineIndex" value="1">
           </div>
           <div class="col-3 mb-1">
-            <button type="button" class="btn btn-block btn-secondary" onclick="action('moveGcodeGoto',$('#gcodeLineIndex').val()-1);")>Goto</button>
+            <button type="button" class="btn btn-block btn-secondary state-play state-pause" onclick="action('moveGcodeGoto',$('#gcodeLineIndex').val()-1);")>Goto</button>
           </div>
           <div class="col-2 mb-1">
             <button id="videoStatus" type="button" class="btn btn-block btn-secondary" onclick="action('toggleCamera');")><i data-feather="video-off"></i></button>

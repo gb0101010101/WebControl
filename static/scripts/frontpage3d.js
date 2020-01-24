@@ -328,15 +328,18 @@ $(document).ready(function(){
 
 function pauseRun(){
   if ($("#pauseButton").text()=="Pause"){
+    uiState('pause');
     action('pauseRun');
   }
   else {
+    uiState('resume');
     action('resumeRun');
   }
 }
 
 function resumeRun(){
-    action('resumeRun')
+  uiState('resume');
+  action('resumeRun')
 }
 
 
@@ -901,4 +904,21 @@ function processStatusMessage(data){
         $("#currentPositioningMode").text("Absolute (G90)");
     else
         $("#currentPositioningMode").text("Incremental (G91)");
+}
+
+function uiState(state) {
+  switch (state) {
+    case 'play':
+      $(":button.state-play").prop("disabled", true);
+      break;
+    case 'stop':
+      $(":button.state-play, :button.state-pause").prop("disabled", false);
+      break;
+    case 'pause':
+      $(":button.state-pause").prop("disabled", true);
+      break;
+    case 'resume':
+      $(":button.state-pause").prop("disabled", false);
+      break;
+  }
 }
