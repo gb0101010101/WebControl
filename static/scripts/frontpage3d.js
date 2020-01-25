@@ -909,9 +909,11 @@ function processStatusMessage(data){
 function uiState(state) {
   switch (state) {
     case 'play':
+      $("#pauseButton").prop("disabled", false);
       $(":button.state-play").prop("disabled", true);
       break;
     case 'stop':
+      $("#pauseButton").prop("disabled", true);
       $(":button.state-play, :button.state-pause").prop("disabled", false);
       break;
     case 'pause':
