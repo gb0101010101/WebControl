@@ -330,13 +330,6 @@ $(document).ready(function(){
 
 function processRequestedSetting(data){
   //console.log(msg);
-  if (data.setting=="pauseButtonSetting"){
-    if(data.value=="Resume")
-        $('#pauseButton').removeClass('btn-warning').addClass('btn-info');
-    else
-        $('#pauseButton').removeClass('btn-info').addClass('btn-warning');
-    $("#pauseButton").text(data.value);
-  }
   if (data.setting=="units"){
     console.log("requestedSetting:"+data.value);
     $("#units").text(data.value)
@@ -899,8 +892,8 @@ function setState(state, controller = false) {
   switch (state) {
 	case 'resume':
 	  uiState = 'play';
-	  $("#pauseButton").text("Pause").attr('onClick', 'setState("pause")');
-	  $(":button.state-pause").prop("disabled", false);
+	  $("#pauseButton").text("Pause").removeClass('btn-info').addClass('btn-warning').attr('onClick', 'setState("pause")');
+	  $(":button.state-pause").prop("disabled", true);
 	  if (!controller) {
 	    action('resumeRun');
 	  }
@@ -917,16 +910,16 @@ function setState(state, controller = false) {
 	  uiState = 'stop';
 	  // 'stopbutton' class added by processAlarm().
 	  $("#stopButton").removeClass('stopbutton');
-	  $("#pauseButton").prop("disabled", true).text("Pause").attr('onClick', 'setState("pause")');
-	  $(":button.state-play, :button.state-pause").prop("disabled", false);
+	  $("#pauseButton").text("Pause").removeClass('btn-info').addClass('btn-warning').attr('onClick', 'setState("pause")');
+	  $(":button.state-play").prop("disabled", false);
 	  if (!controller) {
 	    action('stopRun');
 	  }
 	  break;
 	case 'pause':
 	  uiState = 'pause';
-	  $("#pauseButton").text("Resume").attr('onClick', 'setState("resume")');
-	  $(":button.state-pause").prop("disabled", true);
+	  $("#pauseButton").text("Resume").removeClass('btn-warning').addClass('btn-info').attr('onClick', 'setState("resume")');
+	  $(":button.state-pause").prop("disabled", false);
 	  if (!controller) {
 	    action('pauseRun');
 	  }
