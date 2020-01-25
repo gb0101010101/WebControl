@@ -618,6 +618,7 @@ class UIProcessor:
                 "uploadFlag": self.app.data.uploadFlag,
                 "positioningMode": self.app.data.positioningMode,
                 "currentTool": self.app.data.currentTool,
+                "runState": self.app.data.runState,
             }
             socketio.emit("message",
                           {"command": "statusMessage", "data": json.dumps(statusData), "dataFormat": "json"},

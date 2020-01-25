@@ -415,9 +415,11 @@ class Actions(MakesmithInitFuncs):
                     self.sendGCodePositionUpdate(recalculate=True)
                     print("h5")
                     self.data.uploadFlag = 1
+                    self.data.runState = "play"
                 else:
                     print("h6")
                     self.data.uploadFlag = 1
+                    self.data.runState = "play"
                 self.data.gpioActions.causeAction("PlayLED", "on")
                 return True
             else:
@@ -448,6 +450,7 @@ class Actions(MakesmithInitFuncs):
                 self.data.gcode_queue.queue.clear()
             # TODO: app.onUploadFlagChange(self.stopRun, 0) edit: not sure this is needed anymore
             self.data.console_queue.put("Gcode stopped")
+            self.data.runState = "stop"
             self.sendGCodePositionUpdate(self.data.gcodeIndex)
             # notify UI client to clear any alarm that's active because a stop has been process.
             self.data.ui_queue1.put("Action", "clearAlarm", "")
@@ -544,6 +547,7 @@ class Actions(MakesmithInitFuncs):
                 self.data.pausedUnits = self.data.units
                 self.data.pausedPositioningMode = self.data.positioningMode
                 self.data.gpioActions.causeAction("PauseLED", "on")
+                self.data.runState = "pause"
             return True
         except Exception as e:
             self.data.console_queue.put(str(e))
@@ -599,6 +603,7 @@ class Actions(MakesmithInitFuncs):
             # needed only if user initiated pause, but doesn't actually cause harm to controller.
             self.data.quick_queue.put("~")
             self.data.ui_queue1.put("Action", "setAsPause", "")
+            self.data.runState = "play"
             self.data.gpioActions.causeAction("PauseLED", "off")
             return True
         except Exception as e:

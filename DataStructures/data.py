@@ -206,7 +206,7 @@ class Data:
     platform = "RPI"
     platformHome = ""
 
-
+    runState = "stop";
 
     def __init__(self):
         """

@@ -231,6 +231,8 @@ var isComputedEnabled = false;
 
 animate();
 
+uiState = 'stop';
+
 window.addEventListener( 'resize', onWindowResize, false );
 
 function onWindowResize(){
@@ -325,23 +327,6 @@ $(document).ready(function(){
     });
     $("#stickyButtons").css("top", $(".navbar").outerHeight());
 });
-
-function pauseRun(){
-  if ($("#pauseButton").text()=="Pause"){
-    uiState('pause');
-    action('pauseRun');
-  }
-  else {
-    uiState('resume');
-    action('resumeRun');
-  }
-}
-
-function resumeRun(){
-  uiState('resume');
-  action('resumeRun')
-}
-
 
 function processRequestedSetting(data){
   //console.log(msg);
@@ -904,23 +889,47 @@ function processStatusMessage(data){
         $("#currentPositioningMode").text("Absolute (G90)");
     else
         $("#currentPositioningMode").text("Incremental (G91)");
+
+    if (data.runState && data.runState != uiState) {
+        setState(data.runState, true);
+    }
 }
 
-function uiState(state) {
+function setState(state, controller = false) {
   switch (state) {
-    case 'play':
-      $("#pauseButton").prop("disabled", false);
-      $(":button.state-play").prop("disabled", true);
-      break;
-    case 'stop':
-      $("#pauseButton").prop("disabled", true);
-      $(":button.state-play, :button.state-pause").prop("disabled", false);
-      break;
-    case 'pause':
-      $(":button.state-pause").prop("disabled", true);
-      break;
-    case 'resume':
-      $(":button.state-pause").prop("disabled", false);
-      break;
+	case 'resume':
+	  uiState = 'play';
+	  $("#pauseButton").text("Pause").attr('onClick', 'setState("pause")');
+	  $(":button.state-pause").prop("disabled", false);
+	  if (!controller) {
+	    action('resumeRun');
+	  }
+	  break;
+	case 'play':
+	  uiState = 'play';
+	  $("#pauseButton").prop("disabled", false);
+	  $(":button.state-play").prop("disabled", true);
+	  if (!controller) {
+	    action('startRun')
+	  }
+	  break;
+	case 'stop':
+	  uiState = 'stop';
+	  // 'stopbutton' class added by processAlarm().
+	  $("#stopButton").removeClass('stopbutton');
+	  $("#pauseButton").prop("disabled", true).text("Pause").attr('onClick', 'setState("pause")');
+	  $(":button.state-play, :button.state-pause").prop("disabled", false);
+	  if (!controller) {
+	    action('stopRun');
+	  }
+	  break;
+	case 'pause':
+	  uiState = 'pause';
+	  $("#pauseButton").text("Resume").attr('onClick', 'setState("resume")');
+	  $(":button.state-pause").prop("disabled", true);
+	  if (!controller) {
+	    action('pauseRun');
+	  }
+	  break;
   }
 }

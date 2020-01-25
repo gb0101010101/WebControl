@@ -79,13 +79,13 @@
         </div>
         <div class="row">
           <div class="col mb-1">
-            <button type="button" class="btn btn-block btn-success state-play" onclick="action('startRun'); uiState('play')">Play</button>
+            <button type="button" class="btn btn-block btn-success state-play" onclick="setState('play')">Play</button>
           </div>
           <div class="col mb-1">
-            <button type="button" id="pauseButton" class="btn btn-block btn-warning" onclick="pauseRun()" disabled>Pause</button>
+            <button type="button" id="pauseButton" class="btn btn-block btn-warning" onclick="setState('pause')" disabled>Pause</button>
           </div>
           <div class="col mb-1">
-            <button type="button" id="stopButton" class="btn btn-block btn-danger" onclick="$(this).removeClass('stopbutton'); action('stopRun'); uiState('stop');">Stop</button>
+            <button type="button" id="stopButton" class="btn btn-block btn-danger" onclick="setState('stop');">Stop</button>
           </div>
         </div>
         <div class="row">
