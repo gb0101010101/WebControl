@@ -93,8 +93,6 @@ class Data:
     manualZAxisAdjust = False
     # this is used to determine the first time the position is received from the machine
     firstTimePosFlag = 0
-    # report if the serial connection is open
-    connectionStatus = 0
     # is the calibration process currently underway 0 -> false
     calibrationInProcess = False
     inPIDVelocityTest = False

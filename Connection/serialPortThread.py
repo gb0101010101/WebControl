@@ -38,7 +38,9 @@ class SerialPortThread(MakesmithInitFuncs):
         message = message + "\n"
 
         if len(message) > 1:
-            self.data.console_queue.put("Sending serial port write: " + str(message).rstrip("\n"))
+            self.data.console_queue.put(
+                "Sending serial port write: " + str(message).rstrip("\n")
+            )
 
             self.bufferSpace = self.bufferSpace - len(
                 message
@@ -81,16 +83,15 @@ class SerialPortThread(MakesmithInitFuncs):
             try:
                 # Update positioning mode after message has been sent.
                 self._serialInstance.write(message)
+                self.lastWriteTime = time.time()
                 # If positioning mode has changed then update.
                 if positioningMode is not None:
                     self.data.positioningMode = positioningMode
 
                 self.data.logger.writeToLog("Sent: " + str(message.decode()))
-            except:
-                self.data.console_queue.put("Serial port write failed.")
-                self.data.logger.writeToLog("Serial port write failed: " + str(message.decode()))
+            except Exception as e:
+                self.data.serialPort.processWriteException(e, message)
 
-            self.lastWriteTime = time.time()
         else:
             self.data.console_queue.put("Skipping: " + str(message).rstrip("\n"))
 
@@ -101,17 +102,14 @@ class SerialPortThread(MakesmithInitFuncs):
         if self.data.gcodeIndex < len(self.data.gcode):
             line = self.data.gcode[self.data.gcodeIndex]
             # Filter comments from line.
-            filtersparsed = re.sub(
-                r"\(([^)]*)\)", "", line
-            )
+            filtersparsed = re.sub(r"\(([^)]*)\)", "", line)
             # Replace mach3 style gcode comments with newline.
-            line = re.sub(
-                r";([^.]*)?", "", filtersparsed
-            )
+            line = re.sub(r";([^.]*)?", "", filtersparsed)
             # Replace standard ; initiated gcode comments with newline
             # Check if command is going to be issued that pauses the controller.
             self.manageToolChange(line)
-            if not line.isspace():  # If all spaces, don't send. Likely a comment.
+            if not line.isspace():
+                # If the line only contains spaces then don't send it as it is likely a comment.
                 # Put gcode home shift here. Only if in absolute mode (G90)
                 if self.data.positioningMode == 0:
                     line = self.data.gcodeFile.moveLine(line)
@@ -121,7 +119,7 @@ class SerialPortThread(MakesmithInitFuncs):
                     if self.data.units != "INCHES":
                         self.data.actions.updateSetting(
                             "toInches", 0, True
-                        ) # value doesn't matter.
+                        )  # value doesn't matter.
                 if line.find("G21") != -1:
                     if self.data.units != "MM":
                         self.data.actions.updateSetting(
@@ -193,17 +191,16 @@ class SerialPortThread(MakesmithInitFuncs):
                     lineFromMachine = self._serialInstance.readline().decode()
                     self.lastMessageTime = time.time()
                     self.data.message_queue.put(lineFromMachine)
-            except:
-                pass
+            except Exception as e:
+                self.data.serialPort.processReadException(e)
 
-            # Check if a line has been completed
+            # Check if a line has been completed.
             if lineFromMachine == "ok\r\n" or (
                 len(lineFromMachine) >= 6 and lineFromMachine[0:6] == "error:"
             ):
                 self.machineIsReadyForData = True
-                if (
-                    bool(self.lengthOfLastLineStack) is True
-                ):  # if we've sent lines to the machine
+                if bool(self.lengthOfLastLineStack) is True:
+                    # if we've sent lines to the machine
                     # free up that space in the buffer
                     self.bufferSpace = (
                         self.bufferSpace + self.lengthOfLastLineStack.pop()
@@ -212,13 +209,13 @@ class SerialPortThread(MakesmithInitFuncs):
             # Write to the machine if ready
             # -------------------------------------------------------------------------------------
 
-            # send any emergency instructions to the machine if there are any
+            # Send any emergency instructions to the machine if there are any.
             if self.data.quick_queue.empty() != True:
                 command = self.data.quick_queue.get_nowait()
                 self._write(command, True)
                 self.data.quick_queue.task_done()
 
-            # send regular instructions to the machine if there are any
+            # Send regular instructions to the machine if there are any.
             # print("bSpace="+str(self.bufferSpace)+", bSize="+str(self.bufferSize)+", ready="+str(self.machineIsReadyForData))
             if self.bufferSpace == self.bufferSize:
                 if self.data.gcode_queue.empty() != True:
@@ -252,9 +249,9 @@ class SerialPortThread(MakesmithInitFuncs):
                             )
                         self.data.gcode_queue.task_done()
 
-            # Send the next line of gcode to the machine if we're running a program and uploadFlag is enabled. Will
-            # send lines to buffer if there is space and the feature is turned on
-            # Also, don't send if there's still data in gcode_queue.
+            # Send the next line of gcode to the machine if we're running a program and uploadFlag is enabled.
+            # Will send lines to buffer if there is space; and the feature is turned on.
+            # Don't send if there's still data in gcode_queue.
             if (
                 self.data.uploadFlag == 1
                 and len(self.data.gcode) > 0
@@ -273,7 +270,7 @@ class SerialPortThread(MakesmithInitFuncs):
                         if self.bufferSpace > len(line):
                             self.sendNextLine()
                     except IndexError:
-                        self.data.console_queue.put("index error when reading gcode")
+                        self.data.console_queue.put("Index error: " + str(IndexError))
                         # we don't want the whole serial thread to close if the gcode can't be sent because of an
                         # index error (file deleted...etc)
                 else:
@@ -283,14 +280,14 @@ class SerialPortThread(MakesmithInitFuncs):
                     ):
                         # if the receive buffer is empty and the machine has acked the last line complete...
                         self.sendNextLine()
-                        self.data.console_queue.put("index error when reading gcode")
+                        # self.data.console_queue.put("index error when reading gcode")
 
             # Check for serial connection loss when not using fake servo
             # -------------------------------------------------------------------------------------
-            if self.data.fakeServoStatus == False:
+            if not self.data.fakeServoStatus:
                 if time.time() - self.lastMessageTime > 5:
                     self.data.console_queue.put("Connection Timed Out")
-                    self.data.serialPort.closeConnection()
+                    self.data.serialPort.resetConnection()
                     return
 
             time.sleep(0.01)

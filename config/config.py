@@ -336,9 +336,7 @@ class Config(MakesmithInitFuncs):
             if setting == "COMport":
                 currentSetting = self.data.config.getValue(section, setting)
                 if currentSetting != resultValue:
-                    if self.data.connectionStatus == 1:
-                        self.data.requestSerialClose = True
-                        self.data.console_queue.put("closing serial connection")
+                    self.data.serialPort.changePort()
             self.setValue(section, setting, resultValue, recursionBreaker=False, isImporting = False)
         self.data.console_queue.put("settings updated")
 

@@ -625,7 +625,7 @@ def test_connect():
         )
         app.uithread.start()
 
-    if not app.data.connectionStatus:
+    if not app.data.serialPort.connectionStatus():
         app.data.console_queue.put("Attempting to re-establish connection to controller")
         app.data.serialPort.openConnection()
 

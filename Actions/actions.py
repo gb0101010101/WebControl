@@ -1,4 +1,3 @@
-
 from DataStructures.makesmithInitFuncs import MakesmithInitFuncs
 
 import os
@@ -436,6 +435,7 @@ class Actions(MakesmithInitFuncs):
         :return:
         '''
         try:
+            self.data.serialPort.clearAlarm()
             self.data.console_queue.put("stopping run")
             # this is necessary because of the way PID data is being processed.  Otherwise could potentially get stuck
             # in PID test
@@ -452,7 +452,6 @@ class Actions(MakesmithInitFuncs):
             self.sendGCodePositionUpdate(self.data.gcodeIndex)
             # notify UI client to clear any alarm that's active because a stop has been process.
             self.data.ui_queue1.put("Action", "clearAlarm", "")
-            self.data.serialPort.clearAlarm()
             self.data.gpioActions.causeAction("StopLED", "on")
             return True
         except Exception as e:
@@ -1330,11 +1329,11 @@ class Actions(MakesmithInitFuncs):
             time.sleep(.5)
             t0 = time.time()*1000
             portClosed = False
-            # request the the serial port is closed
-            self.data.serialPort.closeConnection()
+            # Close the serial port passing False to stop reconnection. 
+            self.data.serialPort.closeConnection(False)
             # give it five seconds to close
             while (time.time()*1000 - t0) < 5000:
-                if self.data.serialPort.getConnectionStatus():
+                if not self.data.serialPort.connectionStatus():
                     portClosed = True
                     break
             # wait 1.5 seconds.. not sure why...
@@ -1352,7 +1351,6 @@ class Actions(MakesmithInitFuncs):
                     #print(cmd)
                     # I think this is blocking..
                     x = os.system(cmd)
-                    self.data.connectionStatus = 0
                     #print(x)
                     #print("closing modals")
                     # close off the modals and put away the spinner.
