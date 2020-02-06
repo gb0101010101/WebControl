@@ -910,8 +910,8 @@ function setState(state, controller = false) {
 	  uiState = 'stop';
 	  // 'stopbutton' class added by processAlarm().
 	  $("#stopButton").removeClass('stopbutton');
-	  $("#pauseButton").text("Pause").removeClass('btn-info').addClass('btn-warning').attr('onClick', 'setState("pause")').prop("disabled", true);
 	  $(":button.state-play").prop("disabled", false);
+	  $("#pauseButton").text("Pause").removeClass('btn-info').addClass('btn-warning').attr('onClick', 'setState("pause")').prop("disabled", true);
 	  if (!controller) {
 	    action('stopRun');
 	  }
