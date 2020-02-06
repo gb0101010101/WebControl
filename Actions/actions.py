@@ -423,6 +423,8 @@ class Actions(MakesmithInitFuncs):
                 self.data.gpioActions.causeAction("PlayLED", "on")
                 return True
             else:
+                # No gcode loaded.
+                self.data.runState = "stop"
                 return False
         except Exception as e:
             # something goes wrong, stop uploading.

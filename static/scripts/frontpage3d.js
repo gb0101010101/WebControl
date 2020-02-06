@@ -892,7 +892,7 @@ function setState(state, controller = false) {
   switch (state) {
 	case 'resume':
 	  uiState = 'play';
-	  $("#pauseButton").text("Pause").removeClass('btn-info').addClass('btn-warning').attr('onClick', 'setState("pause")');
+	  $("#pauseButton").text("Pause").removeClass('btn-info').addClass('btn-warning').attr('onClick', 'setState("pause")').prop("disabled", false);
 	  $(":button.state-pause").prop("disabled", true);
 	  if (!controller) {
 	    action('resumeRun');
@@ -910,7 +910,7 @@ function setState(state, controller = false) {
 	  uiState = 'stop';
 	  // 'stopbutton' class added by processAlarm().
 	  $("#stopButton").removeClass('stopbutton');
-	  $("#pauseButton").text("Pause").removeClass('btn-info').addClass('btn-warning').attr('onClick', 'setState("pause")');
+	  $("#pauseButton").text("Pause").removeClass('btn-info').addClass('btn-warning').attr('onClick', 'setState("pause")').prop("disabled", true);
 	  $(":button.state-play").prop("disabled", false);
 	  if (!controller) {
 	    action('stopRun');
