@@ -23,6 +23,7 @@ class UIProcessor:
     previousUploadFlag = None
     previousCurrentTool = None
     previousPositioningMode = None
+    previousRunState = None
 
     def start(self, _app):
 
@@ -610,6 +611,9 @@ class UIProcessor:
         if self.previousCurrentTool != self.app.data.currentTool:
             update = True
             self.previousCurrentTool = self.app.data.currentTool
+        if self.previousRunState != self.app.data.runState:
+            update = True
+            self.previousRunState = self.app.data.runState
 
         #print("positioning mode = "+str(self.app.data.positioningMode))
 

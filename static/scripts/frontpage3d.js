@@ -231,7 +231,7 @@ var isComputedEnabled = false;
 
 animate();
 
-uiState = 'stop';
+uiState = null;
 
 window.addEventListener( 'resize', onWindowResize, false );
 
