@@ -1922,6 +1922,25 @@ class Actions(MakesmithInitFuncs):
             self.data.console_queue.put(str(e))
             return False
 
+    def downloadGCini(self):
+        try:
+            timestr = time.strftime("%Y-%m-%d_%H-%M-%S")
+            filename = self.data.config.home+"/.WebControl/"+"groundcontrol_"+timestr+".ini"
+            settings = self.data.config.getJSONSettings()
+            exclude_sections = ["WebControl Settings", "GPIO Settings", "Camera Settings", "Optical Calibration Settings"]
+            with open(filename, "w") as f:
+                for section_name, section_settings in settings.items():
+                    if section_name not in exclude_sections:
+                        f.write("[" + section_name + "]\n")
+                        for setting in section_settings:
+                            f.write(setting["key"] + " = " + str(setting["value"]) + "\n")
+                        f.write("\n")
+                f.close()
+            return filename
+        except Exception as e:
+            self.data.console_queue.put(str(e))
+            return False
+
     def clearLogs(self):
         try:
             retval = self.data.logger.deleteLogFiles()

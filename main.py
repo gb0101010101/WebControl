@@ -528,6 +528,18 @@ def backupWebControl():
             resp.status_code = 500
             return resp
 
+@app.route("/downloadGCini", methods=["GET"])
+def downloadGCini():
+    app.data.logger.resetIdler()
+    if request.method == "GET":
+        filePath = app.data.actions.downloadGCini()
+        if filePath != False:
+            print(filePath)
+            return send_file(filePath, None, True)
+        else:
+            resp = jsonify("failed")
+            resp.status_code = 500
+            return resp
 
 @app.route("/editBoard", methods=["POST"])
 def editBoard():
