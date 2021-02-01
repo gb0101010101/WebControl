@@ -100,7 +100,7 @@ var localAction;
 $(document).ready(function() {
 
     $("#acceptCalibration").on('click', function(){
-      action('acceptHoleyCalibrationResults',0,0);
+      action('acceptHoleyCalibrationResults');
       $('#contentModal').modal('toggle');
       return false;
     });
